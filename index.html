@@ -168,7 +168,15 @@
         /* Responsive Fix for mobile view to make the 4 cards bigger */
         @media (max-width: 768px) {
             :root {
-                --slide-width: min(85vw, 350px);
+                --slide-width: 80vw;
+            }
+            /* Keep the center card exactly centered without zooming out of bounds */
+            .slide[data-current] {
+                --slide-scale: 1 !important;
+            }
+            /* Pull the text block inside the image so it doesn't push the card off-center */
+            .slide-info--text__wrapper {
+                left: 5% !important;
             }
             /* Completely push adjacent cards off-screen so only one shows at a time */
             .slide[data-next] { --slide-tx: 150vw !important; }
@@ -930,9 +938,9 @@
                 if (window.innerWidth <= 768) {
                     // Mobile specific positioning for Earth
                     // Move it significantly to the right and scale down (half size) so it doesn't overlap left buttons
-                    planet.position.set(1.2, 0, -1.2); 
-                    planet.scale.set(0.5, 0.5, 0.5); 
-                    orbit.target.set(1.2, 0, -1.2); 
+                    planet.position.set(2.0, 0, -0.8); 
+                    planet.scale.set(0.45, 0.45, 0.45); 
+                    orbit.target.set(2.0, 0, -0.8); 
                     
                     // Enable Slider Auto-play every 2 seconds automatically for mobile
                     if (!sliderAutoPlayInterval && typeof updateSliderState === 'function') {
