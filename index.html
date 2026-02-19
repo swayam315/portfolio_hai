@@ -165,6 +165,19 @@
             --font-clash-display: "Rajdhani", sans-serif;
         }
 
+        /* Responsive Fix for mobile view to make the 4 cards bigger */
+        @media (max-width: 768px) {
+            :root {
+                --slide-width: min(75vw, 350px);
+            }
+        }
+
+        /* --- MOBILE VIEW SIMULATOR --- */
+        body.sim-mobile .desktop-nav { display: none !important; }
+        body.sim-mobile .mobile-nav { display: flex !important; }
+        body.sim-mobile .services-grid { grid-template-columns: repeat(1, minmax(0, 1fr)) !important; }
+        body.sim-mobile { --slide-width: min(75vw, 350px); }
+
         .slider-section { width: 100%; height: 100vh; display: grid; place-items: center; overflow: hidden; position: relative; }
         .slider { width: calc(3 * var(--slide-width)); height: 100%; display: flex; align-items: center; justify-content: center; }
         .slider--btn { --size: 40px; display: inline-flex; justify-content: center; align-items: center; opacity: 0.7; transition: opacity 250ms cubic-bezier(0.215, 0.61, 0.355, 1); z-index: 999; background: rgba(0,0,0,0.5); border-radius: 50%; padding: 10px; cursor: pointer; border: 1px solid white; }
@@ -227,7 +240,7 @@
     <div id="canvas-container"></div>
 
     <!-- Image Viewer Modal -->
-    <div id="image-viewer" class="fixed inset-0 z-[100] hidden bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center">
+    <div id="image-viewer" class="fixed inset-0 z-[100] hidden bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center pointer-events-auto">
         <button onclick="closeViewer()" class="absolute top-6 right-6 text-gray-300 hover:text-red-500 transition duration-300 text-5xl z-[105] cursor-pointer bg-black/50 rounded-full w-12 h-12 flex items-center justify-center border border-white/20">
             <i class="fas fa-times text-3xl"></i>
         </button>
@@ -252,16 +265,34 @@
 
     <!-- Main UI Container -->
     <div id="app-ui">
+
+        <!-- NEW: Mobile Menu Overlay (Hidden by Default) -->
+        <div id="mobile-menu" class="fixed inset-0 bg-black/95 backdrop-blur-md z-[200] hidden flex-col items-center justify-center transition-opacity duration-300 opacity-0 pointer-events-none">
+            <button onclick="toggleMobileMenu()" class="absolute top-6 right-8 text-4xl text-gray-300 hover:text-red-500 transition cursor-pointer pointer-events-auto">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="flex flex-col gap-8 text-2xl font-[Orbitron] font-bold tracking-widest text-center pointer-events-auto">
+                <span onclick="navigateToMobile('home')" class="text-white hover:text-purple-400 cursor-pointer transition">HOME</span>
+                <span onclick="navigateToMobile('profile')" class="text-white hover:text-purple-400 cursor-pointer transition">PROFILE</span>
+                <span onclick="navigateToMobile('education')" class="text-white hover:text-purple-400 cursor-pointer transition">EDUCATION</span>
+                <span onclick="navigateToMobile('hackathon')" class="text-white hover:text-purple-400 cursor-pointer transition">HACKATHON</span>
+                <span onclick="navigateToMobile('certificates')" class="text-white hover:text-purple-400 cursor-pointer transition">CERTIFICATES</span>
+                <span onclick="navigateToMobile('projects')" class="text-white hover:text-purple-400 cursor-pointer transition">PROJECTS</span>
+                <span onclick="navigateToMobile('contact')" class="text-white hover:text-purple-400 cursor-pointer transition">CONTACT</span>
+                <span onclick="navigateToMobile('admin')" class="text-purple-500 hover:text-purple-400 cursor-pointer transition">ADMIN</span>
+                <span onclick="toggleMobileSimulator()" class="text-yellow-400 hover:text-yellow-300 cursor-pointer transition mt-4 text-xl">TOGGLE VIEW</span>
+            </div>
+        </div>
         
         <!-- VIEW 1: LANDING PAGE (Scrollable) -->
         <div id="landing-view" class="w-full h-full overflow-y-auto custom-scrollbar transition-all duration-500 relative z-20 pointer-events-auto">
             
             <!-- Sticky Navbar -->
-            <nav id="landing-navbar" class="fixed top-0 left-0 w-full h-20 glass-nav flex items-center justify-between px-8 md:px-12 z-50">
+            <nav id="landing-navbar" class="fixed top-0 left-0 w-full h-20 glass-nav flex items-center justify-between px-8 md:px-12 z-50 pointer-events-auto">
                 <div class="flex items-center gap-4 cursor-pointer" onclick="document.getElementById('landing-view').scrollTo({top:0, behavior:'smooth'})">
                     <div class="text-2xl font-bold font-[Orbitron] text-white hover:text-purple-400 transition">PORTFOLIO</div>
                 </div>
-                <div class="hidden md:flex gap-6 text-sm font-bold tracking-wider">
+                <div class="desktop-nav hidden md:flex gap-6 text-sm font-bold tracking-wider">
                     <span onclick="navigateTo('profile')" class="top-nav-link" data-link="profile">PROFILE</span>
                     <span onclick="navigateTo('education')" class="top-nav-link" data-link="education">EDUCATION</span>
                     <span onclick="navigateTo('hackathon')" class="top-nav-link" data-link="hackathon">HACKATHON</span>
@@ -269,9 +300,12 @@
                     <span onclick="navigateTo('projects')" class="top-nav-link" data-link="projects">PROJECTS</span>
                     <span onclick="navigateTo('contact')" class="top-nav-link" data-link="contact">CONTACT</span>
                     <span onclick="navigateTo('admin')" class="top-nav-link" data-link="admin">ADMIN</span>
+                    <span onclick="toggleMobileSimulator()" class="top-nav-link text-yellow-400">MOBILE VIEW</span>
                 </div>
-                <div class="md:hidden text-2xl cursor-pointer" onclick="document.getElementById('landing-view').scrollTo({top:0, behavior:'smooth'})">
-                    <i class="fas fa-arrow-up"></i>
+                <!-- 3 Lines Hamburger Menu for Mobile added here -->
+                <div class="mobile-nav md:hidden flex items-center gap-4 text-2xl cursor-pointer">
+                    <i class="fas fa-arrow-up text-xl" onclick="document.getElementById('landing-view').scrollTo({top:0, behavior:'smooth'})"></i>
+                    <i class="fas fa-bars ml-2" onclick="toggleMobileMenu()"></i>
                 </div>
             </nav>
 
@@ -291,6 +325,7 @@
                         <li onclick="navigateTo('projects')" class="nav-item">PROJECTS</li>
                         <li onclick="navigateTo('contact')" class="nav-item">CONTACT ME</li>
                         <li onclick="navigateTo('admin')" class="nav-item">ADMIN</li>
+                        <li onclick="toggleMobileSimulator()" class="nav-item text-yellow-400">MOBILE VIEW</li>
                     </ul>
                 </nav>
                 <div class="flex flex-col items-center justify-center w-full mt-10 pointer-events-auto cursor-pointer animate-bounce" onclick="document.getElementById('services').scrollIntoView({behavior: 'smooth'})">
@@ -308,7 +343,7 @@
                         <div class="flex flex-col md:flex-row justify-between items-end mb-20">
                             <h2 id="services-title" class="text-5xl font-bold animated-gradient-text">My Services</h2>
                         </div>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <div class="services-grid grid grid-cols-1 md:grid-cols-3 gap-8">
                             <div class="glass-card p-10 rounded-2xl scroll-reveal group"><div class="text-4xl mb-6 text-purple-400 group-hover:scale-110 transition-transform duration-300">01</div><h3 class="text-2xl font-bold mb-4">Web Development</h3><p class="text-gray-400">Custom websites built with React, Python, and modern frameworks. Fast, secure, and scalable.</p></div>
                             <div class="glass-card p-10 rounded-2xl scroll-reveal group"><div class="text-4xl mb-6 text-purple-400 group-hover:scale-110 transition-transform duration-300">02</div><h3 class="text-2xl font-bold mb-4">UI/UX Design</h3><p class="text-gray-400">Designing intuitive and beautiful interfaces that users love to interact with. Figma & Adobe XD experts.</p></div>
                             <div class="glass-card p-10 rounded-2xl scroll-reveal group"><div class="text-4xl mb-6 text-purple-400 group-hover:scale-110 transition-transform duration-300">03</div><h3 class="text-2xl font-bold mb-4">Machine Learning models</h3><p class="text-gray-400">I build and integrate intelligent models that turn data into actionable insights. From sentiment analysis and image classification to predictive analytics, I focus on creating end-to-end ML pipelines that are optimized for accuracy and ready for production deployment.</p></div>
@@ -349,7 +384,7 @@
                 <div class="flex items-center gap-4 cursor-pointer" onclick="navigateTo('home')">
                     <div class="text-2xl font-bold font-[Orbitron] text-white hover:text-purple-400 transition">PORTFOLIO</div>
                 </div>
-                <div class="hidden md:flex gap-6 text-sm font-bold tracking-wider">
+                <div class="desktop-nav hidden md:flex gap-6 text-sm font-bold tracking-wider">
                     <span onclick="navigateTo('profile')" class="top-nav-link" data-link="profile">PROFILE</span>
                     <span onclick="navigateTo('education')" class="top-nav-link" data-link="education">EDUCATION</span>
                     <span onclick="navigateTo('hackathon')" class="top-nav-link" data-link="hackathon">HACKATHON</span>
@@ -357,8 +392,13 @@
                     <span onclick="navigateTo('projects')" class="top-nav-link" data-link="projects">PROJECTS</span>
                     <span onclick="navigateTo('contact')" class="top-nav-link" data-link="contact">CONTACT</span>
                     <span onclick="navigateTo('admin')" class="top-nav-link" data-link="admin">ADMIN</span>
+                    <span onclick="toggleMobileSimulator()" class="top-nav-link text-yellow-400">MOBILE VIEW</span>
                 </div>
-                <div class="md:hidden text-2xl cursor-pointer" onclick="navigateTo('home')"><i class="fas fa-times"></i></div>
+                <!-- 3 Lines Hamburger Menu for Mobile Inner page -->
+                <div class="mobile-nav md:hidden flex items-center gap-4 text-2xl cursor-pointer">
+                    <i class="fas fa-times text-xl" onclick="navigateTo('home')"></i>
+                    <i class="fas fa-bars ml-2" onclick="toggleMobileMenu()"></i>
+                </div>
             </nav>
             <div id="page-content-container" class="pointer-events-auto flex-1 overflow-y-auto custom-scrollbar p-6 md:p-12">
                 <div class="mx-auto rounded-xl min-h-[80%] fade-enter-active w-full flex justify-center">
@@ -369,6 +409,51 @@
     </div>
 
     <script>
+        // --- NEW: MOBILE MENU LOGIC ---
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            if (menu.classList.contains('hidden')) {
+                menu.classList.remove('hidden');
+                // Allow display to register before fading in
+                setTimeout(() => {
+                    menu.classList.remove('opacity-0', 'pointer-events-none');
+                    menu.classList.add('opacity-100', 'pointer-events-auto');
+                }, 10);
+            } else {
+                menu.classList.remove('opacity-100', 'pointer-events-auto');
+                menu.classList.add('opacity-0', 'pointer-events-none');
+                setTimeout(() => {
+                    menu.classList.add('hidden');
+                }, 300);
+            }
+        }
+
+        function navigateToMobile(pageId) {
+            toggleMobileMenu();
+            if(pageId === 'home') {
+                document.getElementById('landing-view').scrollTo({top:0, behavior:'smooth'});
+                navigateTo('home');
+            } else {
+                navigateTo(pageId);
+            }
+        }
+
+        function toggleMobileSimulator() {
+            // Toggles a special class on the body that forces mobile layout
+            document.body.classList.toggle('sim-mobile');
+            
+            // Re-trigger layout constraints for slider if needed
+            window.dispatchEvent(new Event('resize'));
+
+            // If we are turning OFF the simulation, close the mobile menu if it is currently open
+            if (!document.body.classList.contains('sim-mobile')) {
+                const menu = document.getElementById('mobile-menu');
+                if (!menu.classList.contains('hidden')) {
+                    toggleMobileMenu();
+                }
+            }
+        }
+
         // --- GSAP ANIMATIONS ---
         gsap.registerPlugin(ScrollTrigger);
 
@@ -427,7 +512,6 @@
         };
 
         // --- 3D SLIDER LOGIC ---
-        // CHANGED: Reduced to 4 items and updated image names
         const sliderData = [
             { img: 'card1.jpg', title: 'Finalist', sub: '– IIT Bombay Hackathon', desc: '' },
             { img: 'card2.jpg', title: 'Ghost Protocol', sub: '', desc: 'Innovation & Competitive Coding Team' },
@@ -572,7 +656,7 @@
             return `<div class="max-w-6xl w-full glass-panel p-8 md:p-12 rounded-xl"><h2 class="text-4xl font-bold mb-10 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-white border-b border-gray-700 pb-4">Professional Certifications</h2><div class="grid grid-cols-1 md:grid-cols-2 gap-8">${items || '<div class="text-gray-500">No certificates.</div>'}</div></div>`;
         };
 
-        const renderContact = () => `<div class="max-w-6xl w-full glass-panel p-8 md:p-12 rounded-2xl mx-auto border border-white/10"><div class="text-center mb-10"><h2 class="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-white mb-4">Get In Touch</h2><p class="text-xl text-gray-300">Have a project in mind or want to discuss AI? Send me a message.</p></div><form id="contact-form" onsubmit="event.preventDefault(); window.submitContact(event);" class="space-y-6 max-w-3xl mx-auto"><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div class="text-left"><label class="block text-sm text-purple-400 mb-2 font-bold tracking-wider">NAME</label><input type="text" id="c_name" class="w-full bg-black/40 border border-gray-700 p-4 rounded text-white focus:border-purple-400 outline-none transition" required></div><div class="text-left"><label class="block text-sm text-purple-400 mb-2 font-bold tracking-wider">EMAIL</label><input type="email" id="c_email" class="w-full bg-black/40 border border-gray-700 p-4 rounded text-white focus:border-purple-400 outline-none transition" required></div></div><div class="text-left"><label class="block text-sm text-purple-400 mb-2 font-bold tracking-wider">MESSAGE</label><textarea id="c_msg" rows="5" class="w-full bg-black/40 border border-gray-700 p-4 rounded text-white focus:border-purple-400 outline-none transition" required></textarea></div><button type="submit" class="w-full py-4 bg-gradient-to-r from-purple-600 to-purple-800 rounded font-bold text-white text-lg hover:shadow-[0_0_20px_rgba(168,85,247,0.4)] transition">SEND TRANSMISSION</button></form></div>`;
+        const renderContact = () => `<div class="max-w-6xl w-full glass-panel p-8 md:p-12 rounded-2xl mx-auto border border-white/10"><div class="text-center mb-10"><h2 class="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-white mb-4">Get In Touch</h2><p class="text-xl text-gray-300">Have a project in mind or want to discuss AI? Send me a message.</p></div><form id="contact-form" onsubmit="submitContact(event); return false;" class="space-y-6 max-w-3xl mx-auto"><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div class="text-left"><label class="block text-sm text-purple-400 mb-2 font-bold tracking-wider">NAME</label><input type="text" id="c_name" class="w-full bg-black/40 border border-gray-700 p-4 rounded text-white focus:border-purple-400 outline-none transition" required></div><div class="text-left"><label class="block text-sm text-purple-400 mb-2 font-bold tracking-wider">EMAIL</label><input type="email" id="c_email" class="w-full bg-black/40 border border-gray-700 p-4 rounded text-white focus:border-purple-400 outline-none transition" required></div></div><div class="text-left"><label class="block text-sm text-purple-400 mb-2 font-bold tracking-wider">MESSAGE</label><textarea id="c_msg" rows="5" class="w-full bg-black/40 border border-gray-700 p-4 rounded text-white focus:border-purple-400 outline-none transition" required></textarea></div><button type="submit" class="w-full py-4 bg-gradient-to-r from-purple-600 to-purple-800 rounded font-bold text-white text-lg hover:shadow-[0_0_20px_rgba(168,85,247,0.4)] transition">SEND TRANSMISSION</button></form></div>`;
 
         // 7. ADMIN DASHBOARD RENDERER
         const renderAdminDashboard = () => {
@@ -617,7 +701,7 @@
             } 
             else if (activeAdminTab === 'projects') {
                 let items = portfolioState.projects.map((p, i) => `<div class="bg-white/5 p-4 rounded flex justify-between items-center mb-2"><div>${p.title}</div><div><button onclick="editProject(${i})" class="text-blue-400 mr-3"><i class="fas fa-edit"></i></button><button onclick="deleteItem('projects', ${i})" class="text-red-400"><i class="fas fa-trash"></i></button></div></div>`).join('');
-                content = `<h3 class="text-xl font-bold text-white mb-6">Manage Projects</h3><div class="mb-6 space-y-2 border-b border-gray-700 pb-6 bg-black/20 p-4 rounded"><h4 class="text-sm text-purple-400 font-bold mb-2">${editMode ? 'Edit' : 'Add New'}</h4><input id="proj-title" placeholder="Title" class="w-full bg-black/50 border border-gray-700 p-2 text-white rounded"><textarea id="proj-desc" placeholder="Desc" class="w-full bg-black/50 border border-gray-700 p-2 text-white rounded"><input id="proj-git" placeholder="GitHub Link" class="w-full bg-black/50 border border-gray-700 p-2 text-white rounded"><input id="proj-web" placeholder="Website Link" class="w-full bg-black/50 border border-gray-700 p-2 text-white rounded"><div class="pt-2"><label class="text-sm text-gray-400">Project Image</label><input type="file" accept="image/*" id="proj-image" class="w-full bg-black/50 border border-gray-700 p-2 rounded text-white mt-1"></div>${editMode ? `<div class="flex gap-2"><button onclick="saveProjectEdit()" class="bg-blue-600 flex-1 py-2 rounded font-bold">Update</button><button onclick="cancelEdit()" class="bg-gray-600 px-4 py-2 rounded font-bold">Cancel</button></div>` : `<button onclick="addProject()" class="bg-green-600 w-full py-2 rounded font-bold">Add New</button>`}</div><div>${items}</div>`;
+                content = `<h3 class="text-xl font-bold text-white mb-6">Manage Projects</h3><div class="mb-6 space-y-2 border-b border-gray-700 pb-6 bg-black/20 p-4 rounded"><h4 class="text-sm text-purple-400 font-bold mb-2">${editMode ? 'Edit' : 'Add New'}</h4><input id="proj-title" placeholder="Title" class="w-full bg-black/50 border border-gray-700 p-2 text-white rounded"><textarea id="proj-desc" placeholder="Desc" class="w-full bg-black/50 border border-gray-700 p-2 text-white rounded"></textarea><input id="proj-git" placeholder="GitHub Link" class="w-full bg-black/50 border border-gray-700 p-2 text-white rounded"><input id="proj-web" placeholder="Website Link" class="w-full bg-black/50 border border-gray-700 p-2 text-white rounded"><div class="pt-2"><label class="text-sm text-gray-400">Project Image</label><input type="file" accept="image/*" id="proj-image" class="w-full bg-black/50 border border-gray-700 p-2 rounded text-white mt-1"></div>${editMode ? `<div class="flex gap-2"><button onclick="saveProjectEdit()" class="bg-blue-600 flex-1 py-2 rounded font-bold">Update</button><button onclick="cancelEdit()" class="bg-gray-600 px-4 py-2 rounded font-bold">Cancel</button></div>` : `<button onclick="addProject()" class="bg-green-600 w-full py-2 rounded font-bold">Add New</button>`}</div><div>${items}</div>`;
             }
             else if (activeAdminTab === 'certificates') {
                 let items = portfolioState.certificates.map((c, i) => `<div class="bg-white/5 p-4 rounded flex justify-between items-center mb-2"><div>${c.title}</div><div><button onclick="editCertificate(${i})" class="text-blue-400 mr-3"><i class="fas fa-edit"></i></button><button onclick="deleteItem('certificates', ${i})" class="text-red-400"><i class="fas fa-trash"></i></button></div></div>`).join('');
