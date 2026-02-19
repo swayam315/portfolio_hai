@@ -168,23 +168,51 @@
         /* Responsive Fix for mobile view to make the 4 cards bigger */
         @media (max-width: 768px) {
             :root {
-                --slide-width: 80vw;
+                --slide-width: 90vw; /* Make cards full width */
             }
-            /* Keep the center card exactly centered without zooming out of bounds */
+            /* Hide the slider buttons (arrows) on mobile */
+            .slider--btn {
+                display: none !important;
+            }
+            /* Flatten the 3D structure to a simple flat 2D slider for mobile */
+            .slide {
+                transform: translateX(var(--slide-tx)) !important;
+                perspective: none !important;
+            }
+            /* Remove the tilt/zoom animations inside the image */
+            .slide__inner, .slide-info__inner {
+                transform: none !important;
+            }
+            .slide--image {
+                transform: translate(-50%, -50%) scale(1) !important;
+                filter: brightness(0.8) !important;
+            }
+            /* Move next and previous cards completely off-screen (left to right sliding) */
             .slide[data-current] {
-                --slide-scale: 1 !important;
+                --slide-tx: 0vw !important;
+                opacity: 1 !important;
             }
-            /* Pull the text block inside the image so it doesn't push the card off-center */
-            .slide-info--text__wrapper {
-                left: 5% !important;
+            .slide[data-next] { 
+                --slide-tx: 100vw !important; 
+                opacity: 0 !important;
             }
-            /* Completely push adjacent cards off-screen so only one shows at a time */
-            .slide[data-next] { --slide-tx: 150vw !important; }
-            .slide[data-previous] { --slide-tx: -150vw !important; }
-            /* Hide the adjacent cards on mobile so they don't peek out half-way */
+            .slide[data-previous] { 
+                --slide-tx: -100vw !important; 
+                opacity: 0 !important;
+            }
+            /* Hide the adjacent cards on mobile so they don't peek out */
             .slide:not([data-current]) {
                 opacity: 0 !important;
                 pointer-events: none;
+            }
+            /* Adjust the text inside the image to sit cleanly */
+            .slide-info--text__wrapper {
+                left: 5% !important;
+                bottom: 10% !important;
+                transform: none !important;
+            }
+            .slide-info[data-current] .slide-info--text span {
+                transform: none !important;
             }
         }
 
@@ -335,7 +363,7 @@
                         <li onclick="navigateTo('admin')" class="nav-item">ADMIN</li>
                     </ul>
                 </nav>
-                <div class="flex flex-col items-center justify-center w-full mt-10 pointer-events-auto cursor-pointer animate-bounce" onclick="document.getElementById('services').scrollIntoView({behavior: 'smooth'})">
+                <div class="flex flex-col items-center justify-center w-full mt-10 mb-16 md:mb-0 pointer-events-auto cursor-pointer animate-bounce" onclick="document.getElementById('services').scrollIntoView({behavior: 'smooth'})">
                     <span class="text-xs tracking-[0.3em] font-bold text-purple-400 uppercase mb-2">Scroll Down</span>
                     <i class="fas fa-chevron-down text-white text-2xl"></i>
                 </div>
@@ -942,12 +970,12 @@
                     planet.scale.set(0.45, 0.45, 0.45); 
                     orbit.target.set(2.0, 0, -0.8); 
                     
-                    // Enable Slider Auto-play every 2 seconds automatically for mobile
+                    // Enable Slider Auto-play every 4 seconds automatically for mobile
                     if (!sliderAutoPlayInterval && typeof updateSliderState === 'function') {
                         sliderAutoPlayInterval = setInterval(() => {
                             sliderIndex = (sliderIndex + 1) % sliderData.length;
                             updateSliderState();
-                        }, 2000);
+                        }, 4000);
                     }
                 } else {
                     // Laptop/Desktop specific positioning for Earth (Original)
