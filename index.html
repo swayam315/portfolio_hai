@@ -245,72 +245,39 @@
         .mobile-card {
             position: relative;
             width: 325px;
-            height: 450px;
+            height: auto;
             background: #000;
             border-radius: 18px;
             overflow: hidden;
             box-shadow: 0 5px 10px rgba(0, 0, 0, .2);
             font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column;
         }
 
         .mobile-card .poster {
             position: relative;
-            top: 0;
-            left: 0;
             width: 100%;
-            height: 100%;
+            height: 220px;
             overflow: hidden;
-        }
-
-        .mobile-card .poster::before {
-            content: '';
-            position: absolute;
-            bottom: -45%;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-            transition: .3s;
-            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
-        }
-
-        .mobile-card:hover .poster::before,
-        .mobile-card:active .poster::before {
-            bottom: 0;
+            flex-shrink: 0;
         }
 
         .mobile-card .poster img {
-            position: absolute;
-            top: 0;
-            left: 0;
             width: 100%;
             height: 100%;
             object-fit: cover;
-            transition: .3s;
-        }
-
-        .mobile-card:hover .poster img,
-        .mobile-card:active .poster img {
-            transform: scale(1.1);
+            display: block;
         }
 
         .mobile-card .details {
-            position: absolute;
-            bottom: -100%;
-            left: 0;
+            position: relative;
             width: 100%;
             height: auto;
             padding: 1.5em 1.5em 2em;
-            background: #000a;
-            backdrop-filter: blur(16px) saturate(120%);
-            transition: .3s;
+            background: #111;
             color: #fff;
-            z-index: 2;
-        }
-
-        .mobile-card:hover .details,
-        .mobile-card:active .details {
-            bottom: 0;
+            flex-grow: 1;
         }
 
         .mobile-card .details h1,
@@ -817,7 +784,10 @@
             initSlider();
         }
 
-        // --- GLOBAL STATE ---
+        // --- GLOBAL STATE & BACKEND SYNC ---
+        // Change this to your pythonanywhere URL when hosting!
+        const API_URL = 'http://127.0.0.1:5000'; 
+
         let isAuthenticated = false;
         let activeAdminTab = 'profile';
         let editMode = false;
@@ -833,6 +803,46 @@
             certificates: [ { title: "TensorFlow Developer", issuer: "Google Certificate", desc: "Demonstrated proficiency in building deep learning models.", images: ["https://upload.wikimedia.org/wikipedia/commons/thumb/1/1d/US-CertificateOfNaturalization-2018.jpg/640px-US-CertificateOfNaturalization-2018.jpg"] } ],
             messages: [] 
         };
+
+        // Fetch data from Python Backend on startup
+        async function loadState() {
+            try {
+                const res = await fetch(API_URL + '/api/state');
+                const data = await res.json();
+                if (data && Object.keys(data).length > 0) {
+                    portfolioState = data;
+                }
+            } catch (e) {
+                console.log('Using default local memory (Python backend not running yet)');
+            }
+        }
+
+        // Send data to Python Backend
+        async function syncState() {
+            try {
+                await fetch(API_URL + '/api/state', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(portfolioState)
+                });
+            } catch (e) {
+                console.log('State updated locally, but failed to sync to database.', e);
+            }
+        }
+
+        // Upload images to Python Backend folder
+        async function uploadFile(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+            try {
+                const res = await fetch(API_URL + '/api/upload', { method: 'POST', body: formData });
+                const data = await res.json();
+                return API_URL + data.url; 
+            } catch (e) {
+                console.log('Backend image upload failed, falling back to local base64 memory');
+                return new Promise((resolve) => { const reader = new FileReader(); reader.onload = (e) => resolve(e.target.result); reader.readAsDataURL(file); });
+            }
+        }
 
         // --- 3D SLIDER LOGIC ---
         const sliderData = [
@@ -965,7 +975,11 @@
 
         const renderHackathons = () => {
             const sorted = [...portfolioState.hackathons].sort((a, b) => { return /win|won|winner/i.test(a.rank) === /win|won|winner/i.test(b.rank) ? 0 : /win|won|winner/i.test(a.rank) ? -1 : 1; });
-            let items = sorted.map((hack, index) => `<div class="bg-gradient-to-r from-purple-900/40 to-black p-8 rounded-xl border border-white/10 relative overflow-hidden"><div class="absolute top-0 right-0 bg-yellow-500 text-black font-bold px-4 py-1 rounded-bl-xl shadow-lg">${hack.rank}</div><h3 class="text-3xl font-bold text-white mb-2">${hack.title}</h3><p class="text-gray-400 leading-relaxed mb-6">${hack.desc}</p><div class="flex flex-wrap gap-4 items-center mt-6 pt-6 border-t border-white/10">${hack.images && hack.images.length > 0 ? `<button onclick="openGallery('hackathons', ${index})" class="px-5 py-2 bg-purple-600 hover:bg-purple-500 rounded font-bold text-white transition">View Images</button>` : ''}${hack.demoLink ? `<a href="${hack.demoLink}" target="_blank" class="px-5 py-2 bg-transparent border border-white/30 hover:bg-white/10 rounded font-bold text-white transition">Prototype (Demo)</a>` : ''}<div class="ml-auto flex items-center gap-2"><button onclick="likeHackathon(this)" class="heart-btn text-3xl text-gray-500 hover:text-red-400 transition"><i class="far fa-heart"></i></button><span class="text-xl font-bold count">${hack.likes || 0}</span></div></div></div>`).join('');
+            const likedHacks = JSON.parse(localStorage.getItem('likedHacks') || '[]');
+            let items = sorted.map((hack, index) => {
+                const isLiked = likedHacks.includes(hack.title);
+                return `<div class="bg-gradient-to-r from-purple-900/40 to-black p-8 rounded-xl border border-white/10 relative overflow-hidden"><div class="absolute top-0 right-0 bg-yellow-500 text-black font-bold px-4 py-1 rounded-bl-xl shadow-lg">${hack.rank}</div><h3 class="text-3xl font-bold text-white mb-2">${hack.title}</h3><p class="text-gray-400 leading-relaxed mb-6">${hack.desc}</p><div class="flex flex-wrap gap-4 items-center mt-6 pt-6 border-t border-white/10">${hack.images && hack.images.length > 0 ? `<button onclick="openGallery('hackathons', ${index})" class="px-5 py-2 bg-purple-600 hover:bg-purple-500 rounded font-bold text-white transition">View Images</button>` : ''}${hack.demoLink ? `<a href="${hack.demoLink}" target="_blank" class="px-5 py-2 bg-transparent border border-white/30 hover:bg-white/10 rounded font-bold text-white transition">Prototype (Demo)</a>` : ''}<div class="ml-auto flex items-center gap-2"><button onclick="likeHackathon(this)" class="heart-btn text-3xl ${isLiked ? 'text-red-400 cursor-default' : 'text-gray-500 hover:text-red-400'} transition"><i class="${isLiked ? 'fas heart-active' : 'far'} fa-heart"></i></button><span class="text-xl font-bold count">${hack.likes || 0}</span></div></div></div>`;
+            }).join('');
             return `<div class="max-w-6xl w-full glass-panel p-8 md:p-12 rounded-xl"><h2 class="text-4xl font-bold mb-10 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-white border-b border-gray-700 pb-4">Hackathon Participated & Won</h2><div class="space-y-8">${items || '<div class="text-gray-500">No hackathons listed.</div>'}</div></div>`;
         };
 
@@ -1092,18 +1106,49 @@
         function switchAdminTab(tab) { activeAdminTab = tab; editMode = false; editIndex = null; navigateTo('admin'); }
         function cancelEdit() { editMode = false; editIndex = null; navigateTo('admin'); }
 
-        // --- LOGIC: DATA HANDLING ---
+        // --- LOGIC: DATA HANDLING (SYNCED WITH BACKEND) ---
         async function getImagesFromInput(input, max) {
             if (input.files) {
-                const promises = Array.from(input.files).slice(0, max).map(file => new Promise((resolve) => { const reader = new FileReader(); reader.onload = (e) => resolve(e.target.result); reader.readAsDataURL(file); }));
+                const files = Array.from(input.files).slice(0, max);
+                // Upload each file to python backend and get URL back
+                const promises = files.map(file => uploadFile(file));
                 return await Promise.all(promises);
-            } return [];
+            } 
+            return [];
         }
-        function deleteItem(type, index) { if(confirm('Delete?')) { if(type==='experience') portfolioState.profile.experience.splice(index,1); else if(type==='messages') portfolioState.messages.splice(index,1); else portfolioState[type].splice(index,1); navigateTo('admin'); } }
+
+        function deleteItem(type, index) { 
+            if(confirm('Delete?')) { 
+                if(type==='experience') portfolioState.profile.experience.splice(index,1); 
+                else if(type==='messages') portfolioState.messages.splice(index,1); 
+                else portfolioState[type].splice(index,1); 
+                syncState();
+                navigateTo('admin'); 
+            } 
+        }
 
         // Profile
-        function handleAvatarUpload(input) { if (input.files && input.files[0]) { const reader = new FileReader(); reader.onload = function(e) { portfolioState.profile.avatar = e.target.result; }; reader.readAsDataURL(input.files[0]); } }
-        function saveProfile() { portfolioState.profile.name = document.getElementById('admin-name').value; portfolioState.profile.title = document.getElementById('admin-title').value; portfolioState.profile.about = document.getElementById('admin-about').value; alert('Saved'); }
+        async function handleAvatarUpload(input) { 
+            if (input.files && input.files[0]) { 
+                const url = await uploadFile(input.files[0]);
+                portfolioState.profile.avatar = url;
+                syncState();
+                alert("Profile image uploaded!");
+            } 
+        }
+
+        function saveProfile() { 
+            portfolioState.profile.name = document.getElementById('admin-name').value; 
+            
+            // Check if title input exists before saving (prevent crash)
+            const titleEl = document.getElementById('admin-title');
+            if (titleEl) { portfolioState.profile.title = titleEl.value; }
+            
+            portfolioState.profile.about = document.getElementById('admin-about').value; 
+            syncState();
+            alert('Saved'); 
+        }
+
         async function addExperience() {
             const logoImgs = await getImagesFromInput(document.getElementById('new-exp-logo'), 1);
             portfolioState.profile.experience.push({ 
@@ -1113,8 +1158,10 @@
                 desc: document.getElementById('new-exp-desc').value,
                 logo: logoImgs[0] || ''
             }); 
+            syncState();
             navigateTo('admin'); 
         }
+
         function editExperience(i) {
             editMode = true;
             editIndex = i;
@@ -1127,6 +1174,7 @@
                 document.getElementById('new-exp-desc').value = exp.desc;
             }, 50);
         }
+
         async function saveExperienceEdit() {
             const logoImgs = await getImagesFromInput(document.getElementById('new-exp-logo'), 1);
             const exp = portfolioState.profile.experience[editIndex];
@@ -1135,23 +1183,25 @@
             exp.date = document.getElementById('new-exp-date').value;
             exp.desc = document.getElementById('new-exp-desc').value;
             if (logoImgs.length > 0) exp.logo = logoImgs[0];
+            syncState();
             cancelEdit();
         }
 
         // Education
-        async function addEducation() { const imgs = await getImagesFromInput(document.getElementById('edu-images'), 10); portfolioState.education.push({ degree: document.getElementById('edu-degree').value, institution: document.getElementById('edu-inst').value, year: document.getElementById('edu-year').value, desc: document.getElementById('edu-desc').value, images: imgs }); navigateTo('admin'); }
+        async function addEducation() { const imgs = await getImagesFromInput(document.getElementById('edu-images'), 10); portfolioState.education.push({ degree: document.getElementById('edu-degree').value, institution: document.getElementById('edu-inst').value, year: document.getElementById('edu-year').value, desc: document.getElementById('edu-desc').value, images: imgs }); syncState(); navigateTo('admin'); }
         function editEducation(i) { editMode = true; editIndex = i; navigateTo('admin'); setTimeout(() => { const e = portfolioState.education[i]; document.getElementById('edu-degree').value=e.degree; document.getElementById('edu-inst').value=e.institution; document.getElementById('edu-year').value=e.year; document.getElementById('edu-desc').value=e.desc; }, 50); }
-        async function saveEducationEdit() { const imgs = await getImagesFromInput(document.getElementById('edu-images'), 10); const e = portfolioState.education[editIndex]; e.degree = document.getElementById('edu-degree').value; e.institution = document.getElementById('edu-inst').value; e.year = document.getElementById('edu-year').value; e.desc = document.getElementById('edu-desc').value; if(imgs.length) e.images = imgs; cancelEdit(); }
+        async function saveEducationEdit() { const imgs = await getImagesFromInput(document.getElementById('edu-images'), 10); const e = portfolioState.education[editIndex]; e.degree = document.getElementById('edu-degree').value; e.institution = document.getElementById('edu-inst').value; e.year = document.getElementById('edu-year').value; e.desc = document.getElementById('edu-desc').value; if(imgs.length) e.images = imgs; syncState(); cancelEdit(); }
 
         // Hackathon
-        async function addHackathon() { const imgs = await getImagesFromInput(document.getElementById('hack-images'), 15); portfolioState.hackathons.push({ title: document.getElementById('hack-title').value, rank: document.getElementById('hack-rank').value, desc: document.getElementById('hack-desc').value, demoLink: document.getElementById('hack-demo').value, likes: 0, images: imgs }); navigateTo('admin'); }
+        async function addHackathon() { const imgs = await getImagesFromInput(document.getElementById('hack-images'), 15); portfolioState.hackathons.push({ title: document.getElementById('hack-title').value, rank: document.getElementById('hack-rank').value, desc: document.getElementById('hack-desc').value, demoLink: document.getElementById('hack-demo').value, likes: 0, images: imgs }); syncState(); navigateTo('admin'); }
         function editHackathon(i) { editMode = true; editIndex = i; navigateTo('admin'); setTimeout(() => { const h = portfolioState.hackathons[i]; document.getElementById('hack-title').value=h.title; document.getElementById('hack-rank').value=h.rank; document.getElementById('hack-desc').value=h.desc; document.getElementById('hack-demo').value=h.demoLink || ''; }, 50); }
-        async function saveHackathonEdit() { const imgs = await getImagesFromInput(document.getElementById('hack-images'), 15); const h = portfolioState.hackathons[editIndex]; h.title = document.getElementById('hack-title').value; h.rank = document.getElementById('hack-rank').value; h.desc = document.getElementById('hack-desc').value; h.demoLink = document.getElementById('hack-demo').value; if(imgs.length) h.images = imgs; cancelEdit(); }
+        async function saveHackathonEdit() { const imgs = await getImagesFromInput(document.getElementById('hack-images'), 15); const h = portfolioState.hackathons[editIndex]; h.title = document.getElementById('hack-title').value; h.rank = document.getElementById('hack-rank').value; h.desc = document.getElementById('hack-desc').value; h.demoLink = document.getElementById('hack-demo').value; if(imgs.length) h.images = imgs; syncState(); cancelEdit(); }
 
         // Projects
         async function addProject() { 
             const imgs = await getImagesFromInput(document.getElementById('proj-image'), 1); 
             portfolioState.projects.push({ title: document.getElementById('proj-title').value, desc: document.getElementById('proj-desc').value, githubLink: document.getElementById('proj-git').value, websiteLink: document.getElementById('proj-web').value, image: imgs[0] || '' }); 
+            syncState();
             navigateTo('admin'); 
         }
         function editProject(i) { 
@@ -1166,13 +1216,14 @@
             p.githubLink = document.getElementById('proj-git').value; 
             p.websiteLink = document.getElementById('proj-web').value; 
             if(imgs.length) p.image = imgs[0];
+            syncState();
             cancelEdit(); 
         }
 
         // Certificates
-        async function addCertificate() { const imgs = await getImagesFromInput(document.getElementById('cert-images'), 2); portfolioState.certificates.push({ title: document.getElementById('cert-title').value, issuer: document.getElementById('cert-issuer').value, desc: document.getElementById('cert-desc').value, images: imgs }); navigateTo('admin'); }
+        async function addCertificate() { const imgs = await getImagesFromInput(document.getElementById('cert-images'), 2); portfolioState.certificates.push({ title: document.getElementById('cert-title').value, issuer: document.getElementById('cert-issuer').value, desc: document.getElementById('cert-desc').value, images: imgs }); syncState(); navigateTo('admin'); }
         function editCertificate(i) { editMode = true; editIndex = i; navigateTo('admin'); setTimeout(() => { const c = portfolioState.certificates[i]; document.getElementById('cert-title').value=c.title; document.getElementById('cert-issuer').value=c.issuer; document.getElementById('cert-desc').value=c.desc; }, 50); }
-        async function saveCertificateEdit() { const imgs = await getImagesFromInput(document.getElementById('cert-images'), 2); const c = portfolioState.certificates[editIndex]; c.title = document.getElementById('cert-title').value; c.issuer = document.getElementById('cert-issuer').value; c.desc = document.getElementById('cert-desc').value; if(imgs.length) c.images = imgs; cancelEdit(); }
+        async function saveCertificateEdit() { const imgs = await getImagesFromInput(document.getElementById('cert-images'), 2); const c = portfolioState.certificates[editIndex]; c.title = document.getElementById('cert-title').value; c.issuer = document.getElementById('cert-issuer').value; c.desc = document.getElementById('cert-desc').value; if(imgs.length) c.images = imgs; syncState(); cancelEdit(); }
 
         // --- GLOBAL WINDOW BINDING TO PREVENT SCOPE ISSUES ---
         window.submitContact = function(e) {
@@ -1188,6 +1239,7 @@
                     msg: msg,
                     date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString()
                 });
+                syncState();
                 alert('Message Sent Successfully!');
                 document.getElementById('contact-form').reset();
             }
@@ -1237,7 +1289,42 @@
         }
         
         // Helper
-        function likeHackathon(btn) { const i = btn.querySelector('i'); const s = btn.parentElement.querySelector('.count'); let c = parseInt(s.innerText); if(i.classList.contains('far')) { i.classList.replace('far','fas'); i.classList.add('heart-active'); c++; } else { i.classList.replace('fas','far'); i.classList.remove('heart-active'); c--; } s.innerText = c; }
+        function likeHackathon(btn) { 
+            const i = btn.querySelector('i'); 
+            
+            // Prevent multiple clicks if already liked
+            if(i.classList.contains('fas')) return; 
+
+            const s = btn.parentElement.querySelector('.count'); 
+            let c = parseInt(s.innerText); 
+            
+            // Turn it permanently red for the user
+            i.classList.replace('far','fas'); 
+            i.classList.add('heart-active'); 
+            btn.classList.remove('text-gray-500', 'hover:text-red-400');
+            btn.classList.add('text-red-400', 'cursor-default');
+            
+            c++; 
+            s.innerText = c; 
+            
+            // Find the title of this specific hackathon
+            const title = btn.closest('.bg-gradient-to-r').querySelector('h3').innerText;
+            
+            // Save to browser LocalStorage so it stays red when they reload the page
+            let likedHacks = JSON.parse(localStorage.getItem('likedHacks') || '[]');
+            if(!likedHacks.includes(title)) {
+                likedHacks.push(title);
+                localStorage.setItem('likedHacks', JSON.stringify(likedHacks));
+            }
+
+            // Save to your Python database
+            const hack = portfolioState.hackathons.find(h => h.title === title);
+            if (hack) {
+                hack.likes = c;
+                syncState(); 
+            }
+        }
+
         function initProfileLogic() { const b = document.querySelectorAll(".card-buttons button"); const s = document.querySelectorAll(".card-section"); const c = document.querySelector(".card"); if (!c || !b.length) return; b.forEach(btn => { btn.addEventListener("click", (e) => { const t = e.target.getAttribute("data-section"); c.setAttribute("data-state", t); if(t !== "#about") c.classList.add("is-active"); else c.classList.remove("is-active"); s.forEach(x => x.classList.remove("is-active")); b.forEach(y => y.classList.remove("is-active")); e.target.classList.add("is-active"); document.querySelector(t).classList.add("is-active"); }); }); }
 
         // --- MOBILE CAROUSEL LOGIC ---
@@ -1362,9 +1449,11 @@
             function animate() { requestAnimationFrame(animate); earth.rotation.y += 0.0005; atmo.rotation.y += 0.0007; glow.material.uniforms.viewVector.value = new THREE.Vector3().subVectors(camera.position, planet.position); orbit.update(); renderer.render(scene, camera); }
             animate();
             
-            // Init GSAP & Mobile Carousel
-            initLandingAnimations();
-            initMobileCarousel();
+            // Load state from backend, then initialize UI
+            loadState().then(() => {
+                initLandingAnimations();
+                initMobileCarousel();
+            });
         }
         
         initThreeJS();
