@@ -397,6 +397,108 @@
             height: 100%;
             object-fit: cover;
         }
+
+        /* --- INTEGRATED CAROUSEL FOR MOBILE CARDS --- */
+        .image-thumbnail-carousel {
+            width: 100%;
+            display: flex;
+            flex-flow: column;
+            gap: 1.5rem;
+            position: relative;
+        }
+        .image-display {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+        .screen {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+        }
+        .thumbnail-carousel {
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 10px;
+        }
+        .carousel__slider {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .carousel__slide {
+            cursor: pointer;
+            flex: none;
+            aspect-ratio: 1;
+            block-size: 10px; /* dot size */
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.3);
+            position: relative;
+            transition: background-color 0.3s;
+        }
+        .active.carousel__slide {
+            background-color: var(--primary-color);
+            outline: 2px solid var(--primary-color);
+            outline-offset: 4px;
+        }
+        .carousel__btn {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            padding: 0.5rem;
+        }
+        .arrow-icon {
+            fill: rgba(255,255,255,0.4);
+            width: 1.5rem;
+            height: 1.5rem;
+            transition: fill 0.3s;
+        }
+        .carousel__btn:not(:disabled):hover .arrow-icon {
+            fill: var(--primary-color);
+        }
+        .carousel__btn:disabled .arrow-icon {
+            opacity: 0.2;
+            cursor: not-allowed;
+        }
+        .thumbnail {
+            opacity: 0;
+            display: none;
+            aspect-ratio: 16 / 9;
+            block-size: 80px;
+            position: absolute;
+            border-radius: 6px;
+            overflow: hidden;
+            z-index: 99;
+            will-change: transform, opacity;
+            transition: opacity 150ms ease-out;
+            transform-origin: bottom;
+            translate: -50%;
+            bottom: 250%; /* Raise it above the dot */
+            left: 50%;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.8);
+        }
+        .thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .carousel__slide:not(.active):hover .thumbnail {
+            opacity: 1;
+            display: block;
+            animation: showThumb 250ms ease-out forwards;
+        }
+        @keyframes showThumb {
+            from { opacity: 0; transform: scale(0); }
+            to { display: block; transform: scale(1); opacity: 1; }
+        }
     </style>
 </head>
 <body>
@@ -525,101 +627,124 @@
                         <button class="slider--btn slider--btn__next"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6" /></svg></button>
                     </div>
 
-                    <!-- NEW MOBILE CARDS -->
+                    <!-- NEW MOBILE CARDS (Replaced with Carousel integration) -->
                     <div class="mobile-cards-wrapper">
-                        <!-- Card 1 -->
-                        <div class="mobile-card">
-                            <div class="poster"><img src="card1.jpg" alt="Location Unknown"></div>
-                            <div class="details">
-                                <h1>Location Unknown</h1>
-                                <h2>2021 • PG • 1hr 38min</h2>
-                                <div class="rating">
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="far fa-star"></i>
-                                    <span>4.2/5</span>
-                                </div>
-                                <div class="tags">
-                                    <span class="tag">Italian</span>
-                                    <span class="tag">Drama</span>
-                                    <span class="tag">Indie</span>
-                                </div>
-                                <p class="desc">
-                                    Marco, a disillusioned backpacker in his late 20s, embarks on a solitary journey in search for meaning.
-                                </p>
-                                <div class="cast">
-                                    <h3>Cast</h3>
-                                    <ul>
-                                        <li><img src="https://i.postimg.cc/jqgkqhSb/cast-11.jpg" alt="Marco Andrews" title="Marco Andrews"></li>
-                                        <li><img src="https://i.postimg.cc/8P7X7r7r/cast-12.jpg" alt="Rebecca Floyd" title="Rebecca Floyd"></li>
-                                        <li><img src="https://i.postimg.cc/2SvHwRFk/cast-13.jpg" alt="Antonio Herrera" title="Antonio Herrera"></li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- Card 2 -->
-                        <div class="mobile-card">
-                            <div class="poster"><img src="card2.jpg" alt="Air"></div>
-                            <div class="details">
-                                <h1>Air</h1>
-                                <h2>2020 • PG • 24min</h2>
-                                <div class="rating">
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="far fa-star"></i>
-                                    <span>4/5</span>
-                                </div>
-                                <div class="tags">
-                                    <span class="tag">Romance</span>
-                                    <span class="tag">Comedy</span>
-                                    <span class="tag">Short</span>
-                                </div>
-                                <p class="desc">
-                                    Two strangers meet together on a plane flying to the alps.
-                                </p>
-                                <div class="cast">
-                                    <h3>Cast</h3>
-                                    <ul>
-                                        <li><img src="https://i.postimg.cc/yY2QcYRp/cast-21.jpg" alt="Angelina Whyte" title="Angelina Whyte"></li>
-                                        <li><img src="https://i.postimg.cc/R0BgpsXc/cast-22.jpg" alt="Ivan Benson" title="Ivan Benson"></li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- Card 4 (Replaces Card 3 per instructions) -->
-                        <div class="mobile-card">
-                            <div class="poster"><img src="card4.jpg" alt="End Credits"></div>
-                            <div class="details">
-                                <h1>End Credits</h1>
-                                <h2>2021 • R • 1hr 41min</h2>
-                                <div class="rating">
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star-half-alt"></i>
-                                    <span>4.7/5</span>
-                                </div>
-                                <div class="tags">
-                                    <span class="tag yellow">Teen</span>
-                                    <span class="tag">Comedy</span>
-                                    <span class="tag blue">Drama</span>
-                                </div>
-                                <p class="desc">
-                                    Alex, together with his best friends, goes on a road trip whilst experiencing friendship, self-discovery, and the bittersweet transition to adulthood.
-                                </p>
-                                <div class="cast">
-                                    <h3>Cast</h3>
-                                    <ul>
-                                        <li><img src="https://i.postimg.cc/xd3twv4B/cast-31.jpg" alt="Jessica Enduro" title="Jessica Enduro"></li>
-                                        <li><img src="https://i.postimg.cc/C1MmSZy5/cast-32.jpg" alt="Charles Garcia" title="Charles Garcia"></li>
-                                    </ul>
-                                </div>
-                            </div>
+                        <div class="image-thumbnail-carousel">
+                            <!-- Main Display holding the active mobile card -->
+                            <section class="image-display">
+                                <div class="screen"></div>
+                            </section>
+                            
+                            <!-- Carousel controls and dots/thumbnails -->
+                            <section class="thumbnail-carousel">
+                                <button type="button" class="carousel__btn prev" aria-label="Previous slide">
+                                    <svg width="24" height="24" fill="currentColor" class="arrow-icon" viewBox="0 0 16 16">
+                                        <path fill-rule="evenodd" d="M1 8a7 7 0 1 0 14 0A7 7 0 0 0 1 8m15 0A8 8 0 1 1 0 8a8 8 0 0 1 16 0m-4.5-.5a.5.5 0 0 1 0 1H5.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5z" />
+                                    </svg>
+                                </button>
+                                <ul class="carousel__slider">
+                                    
+                                    <!-- Carousel Item 1 -->
+                                    <li class="carousel__slide">
+                                        <div class="thumbnail"><img loading="lazy" src="card1.jpg" alt="Thumbnail 1"></div>
+                                        <template class="card-data">
+                                            <div class="mobile-card">
+                                                <div class="poster"><img src="card1.jpg" alt="Location Unknown"></div>
+                                                <div class="details">
+                                                    <h1>Location Unknown</h1>
+                                                    <h2>2021 • PG • 1hr 38min</h2>
+                                                    <div class="rating">
+                                                        <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="far fa-star"></i>
+                                                        <span>4.2/5</span>
+                                                    </div>
+                                                    <div class="tags">
+                                                        <span class="tag">Italian</span><span class="tag">Drama</span><span class="tag">Indie</span>
+                                                    </div>
+                                                    <p class="desc">
+                                                        Marco, a disillusioned backpacker in his late 20s, embarks on a solitary journey in search for meaning.
+                                                    </p>
+                                                    <div class="cast">
+                                                        <h3>Cast</h3>
+                                                        <ul>
+                                                            <li><img src="https://i.postimg.cc/jqgkqhSb/cast-11.jpg" alt="Marco" title="Marco"></li>
+                                                            <li><img src="https://i.postimg.cc/8P7X7r7r/cast-12.jpg" alt="Rebecca" title="Rebecca"></li>
+                                                            <li><img src="https://i.postimg.cc/2SvHwRFk/cast-13.jpg" alt="Antonio" title="Antonio"></li>
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </li>
+
+                                    <!-- Carousel Item 2 -->
+                                    <li class="carousel__slide">
+                                        <div class="thumbnail"><img loading="lazy" src="card2.jpg" alt="Thumbnail 2"></div>
+                                        <template class="card-data">
+                                            <div class="mobile-card">
+                                                <div class="poster"><img src="card2.jpg" alt="Air"></div>
+                                                <div class="details">
+                                                    <h1>Air</h1>
+                                                    <h2>2020 • PG • 24min</h2>
+                                                    <div class="rating">
+                                                        <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="far fa-star"></i>
+                                                        <span>4/5</span>
+                                                    </div>
+                                                    <div class="tags">
+                                                        <span class="tag">Romance</span><span class="tag">Comedy</span><span class="tag">Short</span>
+                                                    </div>
+                                                    <p class="desc">
+                                                        Two strangers meet together on a plane flying to the alps.
+                                                    </p>
+                                                    <div class="cast">
+                                                        <h3>Cast</h3>
+                                                        <ul>
+                                                            <li><img src="https://i.postimg.cc/yY2QcYRp/cast-21.jpg" alt="Angelina" title="Angelina"></li>
+                                                            <li><img src="https://i.postimg.cc/R0BgpsXc/cast-22.jpg" alt="Ivan" title="Ivan"></li>
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </li>
+
+                                    <!-- Carousel Item 3 -->
+                                    <li class="carousel__slide">
+                                        <div class="thumbnail"><img loading="lazy" src="card4.jpg" alt="Thumbnail 3"></div>
+                                        <template class="card-data">
+                                            <div class="mobile-card">
+                                                <div class="poster"><img src="card4.jpg" alt="End Credits"></div>
+                                                <div class="details">
+                                                    <h1>End Credits</h1>
+                                                    <h2>2021 • R • 1hr 41min</h2>
+                                                    <div class="rating">
+                                                        <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i>
+                                                        <span>4.7/5</span>
+                                                    </div>
+                                                    <div class="tags">
+                                                        <span class="tag yellow">Teen</span><span class="tag">Comedy</span><span class="tag blue">Drama</span>
+                                                    </div>
+                                                    <p class="desc">
+                                                        Alex, together with his best friends, goes on a road trip whilst experiencing friendship, self-discovery, and the bittersweet transition to adulthood.
+                                                    </p>
+                                                    <div class="cast">
+                                                        <h3>Cast</h3>
+                                                        <ul>
+                                                            <li><img src="https://i.postimg.cc/xd3twv4B/cast-31.jpg" alt="Jessica" title="Jessica"></li>
+                                                            <li><img src="https://i.postimg.cc/C1MmSZy5/cast-32.jpg" alt="Charles" title="Charles"></li>
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </li>
+
+                                </ul>
+                                <button type="button" class="carousel__btn next" aria-label="Next slide">
+                                    <svg width="24" height="24" fill="currentColor" class="arrow-icon" viewBox="0 0 16 16">
+                                        <path fill-rule="evenodd" d="M1 8a7 7 0 1 0 14 0A7 7 0 0 0 1 8m15 0A8 8 0 1 1 0 8a8 8 0 0 1 16 0M4.5 7.5a.5.5 0 0 0 0 1h5.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5z" />
+                                    </svg>
+                                </button>
+                            </section>
                         </div>
                     </div>
                 </section>
@@ -1161,6 +1286,74 @@
         function likeHackathon(btn) { const i = btn.querySelector('i'); const s = btn.parentElement.querySelector('.count'); let c = parseInt(s.innerText); if(i.classList.contains('far')) { i.classList.replace('far','fas'); i.classList.add('heart-active'); c++; } else { i.classList.replace('fas','far'); i.classList.remove('heart-active'); c--; } s.innerText = c; }
         function initProfileLogic() { const b = document.querySelectorAll(".card-buttons button"); const s = document.querySelectorAll(".card-section"); const c = document.querySelector(".card"); if (!c || !b.length) return; b.forEach(btn => { btn.addEventListener("click", (e) => { const t = e.target.getAttribute("data-section"); c.setAttribute("data-state", t); if(t !== "#about") c.classList.add("is-active"); else c.classList.remove("is-active"); s.forEach(x => x.classList.remove("is-active")); b.forEach(y => y.classList.remove("is-active")); e.target.classList.add("is-active"); document.querySelector(t).classList.add("is-active"); }); }); }
 
+        // --- MOBILE CAROUSEL LOGIC ---
+        const initMobileCarousel = () => {
+            const carouselSlider = document.querySelector(".carousel__slider");
+            if (!carouselSlider) return;
+            const prevButton = document.querySelector(".carousel__btn.prev");
+            const nextButton = document.querySelector(".carousel__btn.next");
+
+            const getActiveSlide = () => document.querySelector(".carousel__slide.active");
+            const getFirstSlide = () => carouselSlider.firstElementChild;
+            const getLastSlide = () => carouselSlider.lastElementChild;
+
+            const getSiblingSlide = (slide, direction) =>
+                direction === "prev"
+                    ? slide.previousElementSibling
+                    : slide.nextElementSibling;
+
+            // Copies the hidden mobile-card HTML into the visible screen
+            const updateScreen = (activeSlide) => {
+                const carouselScreen = document.querySelector(".image-display .screen");
+                const template = activeSlide.querySelector("template.card-data");
+                if (template && carouselScreen) {
+                    carouselScreen.innerHTML = template.innerHTML;
+                }
+            };
+
+            const updateActiveSlideClass = (activeSlide) => {
+                document
+                    .querySelectorAll(".carousel__slide.active")
+                    .forEach((slide) => slide.classList.remove("active"));
+                activeSlide.classList.add("active");
+            };
+
+            const updateButtonStates = (activeSlide) => {
+                prevButton.disabled = !getSiblingSlide(activeSlide, "prev");
+                nextButton.disabled = !getSiblingSlide(activeSlide, "next");
+            };
+
+            const updateCarousel = (activeSlide) => {
+                updateActiveSlideClass(activeSlide);
+                updateScreen(activeSlide);
+                updateButtonStates(activeSlide);
+            };
+
+            const handleButtonClick = (e) => {
+                const activeSlide = getActiveSlide();
+                const newActiveSlide = getSiblingSlide(
+                    activeSlide,
+                    e.currentTarget.classList.contains("prev") ? "prev" : "next"
+                );
+                if (newActiveSlide) {
+                    updateCarousel(newActiveSlide);
+                }
+            };
+
+            const handleCarouselClick = (e) => {
+                const clickedSlide = e.target.closest(".carousel__slide");
+                if (clickedSlide) {
+                    updateCarousel(clickedSlide);
+                }
+            };
+
+            updateCarousel(getFirstSlide());
+
+            prevButton.addEventListener("click", handleButtonClick);
+            nextButton.addEventListener("click", handleButtonClick);
+            carouselSlider.addEventListener("click", handleCarouselClick);
+        };
+
         // --- THREE JS ---
         function initThreeJS() {
             const container = document.getElementById('canvas-container');
@@ -1215,8 +1408,9 @@
             function animate() { requestAnimationFrame(animate); earth.rotation.y += 0.0005; atmo.rotation.y += 0.0007; glow.material.uniforms.viewVector.value = new THREE.Vector3().subVectors(camera.position, planet.position); orbit.update(); renderer.render(scene, camera); }
             animate();
             
-            // Init GSAP
+            // Init GSAP & Mobile Carousel
             initLandingAnimations();
+            initMobileCarousel();
         }
         
         initThreeJS();
